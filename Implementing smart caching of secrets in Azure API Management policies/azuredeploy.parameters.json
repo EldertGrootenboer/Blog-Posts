@@ -1,0 +1,12 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaults_kv_we_retrieve_kv_secret_name": {
+            "value": null
+        },
+        "service_apim_we_retrieve_key_vault_secrets_with_msi_name": {
+            "value": null
+        }
+    }
+}

@@ -4,9 +4,9 @@ This template will create a Storage account, after which it will create a API co
 
 Tags: arm, storage
 
-<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2F201-arm-retrieve-storage-key%2Fazuredeploy.json" target="_blank">
+<a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FEldertGrootenboer%2FBlog-Posts%2Fmaster%2FRetrieve%2520Azure%2520Storage%2520access%2520keys%2520in%2520ARM%2520template%2Fazuredeploy.json" target="_blank">
     <img src="http://azuredeploy.net/deploybutton.png"/>
 </a>
-<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FAzure%2Fazure-quickstart-templates%2Fmaster%2F201-arm-retrieve-storage-key%2Fazuredeploy.json" target="_blank">
+<a href="http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2FEldertGrootenboer%2FBlog-Posts%2Fmaster%2FRetrieve%2520Azure%2520Storage%2520access%2520keys%2520in%2520ARM%2520template%2Fazuredeploy.json" target="_blank">
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>

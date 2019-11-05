@@ -1,0 +1,184 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vaults_kv_we_retrieve_kv_secret_name": {
+            "defaultValue": "kv-we-retrieve-kv-secret",
+            "type": "String"
+        },
+        "service_apim_we_retrieve_key_vault_secrets_with_msi_name": {
+            "defaultValue": "apim-we-retrieve-key-vault-secrets-with-msi",
+            "type": "String"
+        }
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service",
+            "apiVersion": "2019-01-01",
+            "name": "[parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name')]",
+            "location": "West Europe",
+            "tags": {
+                "Project": "Retrieving Key Vault Secrets",
+                "Purpose": "Blog"
+            },
+            "sku": {
+                "name": "Developer"
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "publisherEmail": "eldert@eldert.net",
+                "publisherName": "EPH",
+                "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com",
+                "hostnameConfigurations": [
+                    {
+                        "type": "Proxy",
+                        "hostName": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '.azure-api.net')]",
+                        "negotiateClientCertificate": false,
+                        "defaultSslBinding": true
+                    }
+                ],
+                "customProperties": {
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "False"
+                },
+                "virtualNetworkType": "None"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults",
+            "apiVersion": "2016-10-01",
+            "name": "[parameters('vaults_kv_we_retrieve_kv_secret_name')]",
+            "location": "westeurope",
+            "tags": {
+                "Project": "Retrieving Key Vault Secrets",
+                "Purpose": "Blog"
+            },
+            "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "sku": {
+                    "family": "A",
+                    "name": "Standard"
+                },
+                "accessPolicies": [
+                ],
+                "enabledForDeployment": false,
+                "enabledForDiskEncryption": false,
+                "enabledForTemplateDeployment": false
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/retrieve-key-vault-secret')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "displayName": "Retrieve Key Vault Secret",
+                "apiRevision": "1",
+                "serviceUrl": "https://requestbin.com/r/enbjeiqttutuh",
+                "path": "retrieve-key-vault-secret",
+                "protocols": [
+                    "https"
+                ],
+                "isCurrent": true
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/policies",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "value": "<!--\r\n    IMPORTANT:\r\n    - Policy elements can appear only within the <inbound>, <outbound>, <backend> section elements.\r\n    - Only the <forward-request> policy element can appear within the <backend> section element.\r\n    - To apply a policy to the incoming request (before it is forwarded to the backend service), place a corresponding policy element within the <inbound> section element.\r\n    - To apply a policy to the outgoing response (before it is sent back to the caller), place a corresponding policy element within the <outbound> section element.\r\n    - To add a policy position the cursor at the desired insertion point and click on the round button associated with the policy.\r\n    - To remove a policy, delete the corresponding policy statement from the policy document.\r\n    - Policies are applied in the order of their appearance, from the top down.\r\n-->\r\n<policies>\r\n  <inbound></inbound>\r\n  <backend>\r\n    <forward-request />\r\n  </backend>\r\n  <outbound></outbound>\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/subscriptions",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/master')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "scope": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name')), '/')]",
+                "displayName": "Built-in all-access subscription",
+                "state": "active",
+                "primaryKey": "2a1c38b5ebe0400ea944032832ab0e94",
+                "secondaryKey": "d65e1cf758024a6698ad1906c1df3dcb",
+                "allowTracing": true
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/secrets",
+            "apiVersion": "2016-10-01",
+            "name": "[concat(parameters('vaults_kv_we_retrieve_kv_secret_name'), '/MySecretValue')]",
+            "location": "westeurope",
+            "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_kv_we_retrieve_kv_secret_name'))]"
+            ],
+            "properties": {
+                "attributes": {
+                    "enabled": true
+                },
+                "value": "my-secret-value"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/retrieve-key-vault-secret/authentication-policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), 'retrieve-key-vault-secret')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "displayName": "Authentication Policy",
+                "method": "POST",
+                "urlTemplate": "/authentication-policy",
+                "templateParameters": [
+                ],
+                "responses": [
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/policies",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/retrieve-key-vault-secret/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), 'retrieve-key-vault-secret')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "value": "<policies>\r\n  <inbound>\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>",
+                "format": "xml"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), '/retrieve-key-vault-secret/authentication-policy/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), 'retrieve-key-vault-secret', 'authentication-policy')]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'), 'retrieve-key-vault-secret')]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name'))]"
+            ],
+            "properties": {
+                "value": "<policies>\r\n  <inbound>\r\n    <choose>\r\n      <when condition=\"@(context.Request.Body != null)\">\r\n        <!-- Needed, because if we dont use this, retries will result in an error -->\r\n        <set-variable name=\"body\" value=\"@(context.Request.Body.As&lt;string&gt;(preserveContent: true))\" />\r\n      </when>\r\n    </choose>\r\n    <rewrite-uri template=\"/\" copy-unmatched-params=\"true\" />\r\n    <base />\r\n  </inbound>\r\n  <backend>\r\n    <!-- Retry on failure -->\r\n    <retry condition=\"@(context.Response.StatusCode == 401)\" count=\"2\" interval=\"1\">\r\n      <choose>\r\n        <!-- Check if we are in a retry -->\r\n        <when condition=\"@(context.Variables.GetValueOrDefault(&quot;calledOnce&quot;, false))\">\r\n          <!-- If so, remove the secret from the cache -->\r\n          <cache-remove-value key=\"token\" />\r\n          <choose>\r\n            <when condition=\"@(context.Request.Body != null)\">\r\n              <!-- Needed, because if we dont use this, retries will result in an error -->\r\n              <set-body>@((string)context.Variables[\"body\"])</set-body>\r\n            </when>\r\n          </choose>\r\n        </when>\r\n      </choose>\r\n      <!-- Get secret from cache -->\r\n      <cache-lookup-value key=\"token\" default-value=\"noToken\" variable-name=\"token\" />\r\n      <choose>\r\n        <!-- Check if secret was found -->\r\n        <when condition=\"@((string)context.Variables[&quot;token&quot;] == &quot;noToken&quot;)\">\r\n          <!-- Secret was not found in cache, retrieve secret from Key Vault -->\r\n          <send-request ignore-error=\"false\" timeout=\"20\" response-variable-name=\"passwordResponse\" mode=\"new\">\r\n            <set-url>https://kv-we-retrieve-kv-secret.vault.azure.net/secrets/MySecretValue/?api-version=7.0</set-url>\r\n            <set-method>GET</set-method>\r\n            <authentication-managed-identity resource=\"https://vault.azure.net\" />\r\n          </send-request>\r\n          <!-- Update token variable with retrieved secret -->\r\n          <set-variable name=\"token\" value=\"@{ var secret = ((IResponse)context.Variables[&quot;passwordResponse&quot;]).Body.As&lt;JObject&gt;(); return secret[&quot;value&quot;].ToString(); }\" />\r\n          <!-- Store retrieved secret in cache -->\r\n          <cache-store-value key=\"token\" value=\"@((string)context.Variables[&quot;token&quot;])\" duration=\"300\" />\r\n        </when>\r\n      </choose>\r\n      <set-backend-service base-url=\"https://enbjeiqttutuh.x.pipedream.net/\" />\r\n      <!-- Use token for authorization password -->\r\n      <set-header name=\"Authorization\" exists-action=\"override\">\r\n        <value>@((string)context.Variables[\"token\"])</value>\r\n      </set-header>\r\n      <set-variable name=\"calledOnce\" value=\"@(true)\" />\r\n      <forward-request />\r\n    </retry>\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>",
+                "format": "xml"
+            }
+        }
+    ]
+}
