@@ -1,5 +1,5 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
         "vaults_kv_we_retrieve_kv_secret_name": {
@@ -19,10 +19,6 @@
             "apiVersion": "2019-01-01",
             "name": "[parameters('service_apim_we_retrieve_key_vault_secrets_with_msi_name')]",
             "location": "West Europe",
-            "tags": {
-                "Project": "Retrieving Key Vault Secrets",
-                "Purpose": "Blog"
-            },
             "sku": {
                 "name": "Developer"
             },
@@ -57,10 +53,6 @@
             "apiVersion": "2016-10-01",
             "name": "[parameters('vaults_kv_we_retrieve_kv_secret_name')]",
             "location": "westeurope",
-            "tags": {
-                "Project": "Retrieving Key Vault Secrets",
-                "Purpose": "Blog"
-            },
             "properties": {
                 "tenantId": "[subscription().tenantId]",
                 "sku": {
