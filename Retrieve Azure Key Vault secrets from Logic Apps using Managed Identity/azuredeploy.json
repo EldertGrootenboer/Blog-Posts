@@ -2,16 +2,16 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "vaults_kv_we_retrieve_kv_secret_name": {
-            "defaultValue": "kv-we-retrieve-kv-secret",
+        "keyVaultName": {
+            "defaultValue": "[concat('kv', uniqueString(resourceGroup().id))]",
             "type": "String"
         },
-        "storageAccounts_saweretrievingkvsecrets_name": {
-            "defaultValue": "saweretrievingkvsecrets",
+        "storageAccountName": {
+            "defaultValue": "[concat('sa', uniqueString(resourceGroup().id))]",
             "type": "String"
         },
-        "workflows_la_we_retrieve_key_vault_secrets_with_msi_name": {
-            "defaultValue": "la-we-retrieve-key-vault-secrets-with-msi",
+        "logicAppName": {
+            "defaultValue": "[concat('la', uniqueString(resourceGroup().id))]",
             "type": "String"
         }
     },
@@ -20,8 +20,8 @@
         {
             "type": "Microsoft.KeyVault/vaults",
             "apiVersion": "2016-10-01",
-            "name": "[parameters('vaults_kv_we_retrieve_kv_secret_name')]",
-            "location": "westeurope",
+            "name": "[parameters('keyVaultName')]",
+            "location": "[resourceGroup().location]",
             "properties": {
                 "sku": {
                     "family": "A",
@@ -37,10 +37,10 @@
         {
             "type": "Microsoft.KeyVault/vaults/secrets",
             "apiVersion": "2016-10-01",
-            "name": "[concat(parameters('vaults_kv_we_retrieve_kv_secret_name'), '/MySecretValue')]",
-            "location": "westeurope",
+            "name": "[concat(parameters('keyVaultName'), '/MySecretValue')]",
+            "location": "[resourceGroup().location]",
             "dependsOn": [
-                "[resourceId('Microsoft.KeyVault/vaults', parameters('vaults_kv_we_retrieve_kv_secret_name'))]"
+                "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]"
             ],
             "properties": {
                 "value": "my-super-secret-value",
@@ -52,8 +52,8 @@
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
-            "name": "[parameters('workflows_la_we_retrieve_key_vault_secrets_with_msi_name')]",
-            "location": "westeurope",
+            "name": "[parameters('logicAppName')]",
+            "location": "[resourceGroup().location]",
             "identity": {
                 "type": "SystemAssigned"
             },
@@ -100,7 +100,7 @@
                                 "queries": {
                                     "api-version": "2016-10-01"
                                 },
-                                "uri": "[concat('https://', parameters('vaults_kv_we_retrieve_kv_secret_name'), '.vault.azure.net/secrets/MySecretValue/')]"
+                                "uri": "[concat('https://', parameters('keyVaultName'), '.vault.azure.net/secrets/MySecretValue/')]"
                             },
                             "runtimeConfiguration": {
                                 "secureData": {
@@ -119,8 +119,8 @@
         {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2019-04-01",
-            "name": "[parameters('storageAccounts_saweretrievingkvsecrets_name')]",
-            "location": "westeurope",
+            "name": "[parameters('storageAccountName')]",
+            "location": "[resourceGroup().location]",
             "sku": {
                 "name": "Standard_RAGRS",
                 "tier": "Standard"
@@ -151,9 +151,9 @@
         {
             "type": "Microsoft.Storage/storageAccounts/blobServices",
             "apiVersion": "2019-04-01",
-            "name": "[concat(parameters('storageAccounts_saweretrievingkvsecrets_name'), '/default')]",
+            "name": "[concat(parameters('storageAccountName'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saweretrievingkvsecrets_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
             ],
             "properties": {
                 "cors": {
@@ -167,10 +167,10 @@
         {
             "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
             "apiVersion": "2019-04-01",
-            "name": "[concat(parameters('storageAccounts_saweretrievingkvsecrets_name'), '/default/my-container')]",
+            "name": "[concat(parameters('storageAccountName'), '/default/my-container')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccounts_saweretrievingkvsecrets_name'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccounts_saweretrievingkvsecrets_name'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('storageAccountName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
             ],
             "properties": {
                 "publicAccess": "None"
