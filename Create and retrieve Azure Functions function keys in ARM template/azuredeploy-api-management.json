@@ -1,0 +1,122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "apiManagementInstanceName": {
+            "defaultValue": "[concat('apim', uniqueString(resourceGroup().id))]",
+            "type": "String"
+        },
+        "functionAppName": {
+            "defaultValue": "[concat('fa', uniqueString(resourceGroup().id))]",
+            "type": "String"
+        }
+    },
+    "variables": {
+        "functionAppId": "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.ApiManagement/service",
+            "apiVersion": "2019-01-01",
+            "name": "[parameters('apiManagementInstanceName')]",
+            "location": "Central US",
+            "sku": {
+                "name": "Developer",
+                "capacity": 1
+            },
+            "properties": {
+                "publisherEmail": "your@email.com",
+                "publisherName": "My Organization",
+                "notificationSenderEmail": "apimgmt-noreply@mail.windowsazure.com",
+                "hostnameConfigurations": [
+                    {
+                        "type": "Proxy",
+                        "hostName": "[concat(parameters('apiManagementInstanceName'), '.azure-api.net')]",
+                        "negotiateClientCertificate": false,
+                        "defaultSslBinding": true
+                    }
+                ],
+                "customProperties": {
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls10": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Tls11": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Protocols.Ssl30": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Ciphers.TripleDes168": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls10": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Tls11": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Security.Backend.Protocols.Ssl30": "False",
+                    "Microsoft.WindowsAzure.ApiManagement.Gateway.Protocols.Server.Http2": "False"
+                },
+                "virtualNetworkType": "None"
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('apiManagementInstanceName'), '/', parameters('functionAppName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementInstanceName'))]"
+            ],
+            "properties": {
+                "displayName": "[parameters('functionAppName')]",
+                "apiRevision": "1",
+                "path": "[parameters('functionAppName')]",
+                "protocols": [
+                    "https"
+                ],
+                "isCurrent": true
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/backends",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('apiManagementInstanceName'), '/', parameters('functionAppName'))]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementInstanceName'))]"
+            ],
+            "properties": {
+                "url": "[concat('https://', parameters('functionAppName'), '.azurewebsites.net/api')]",
+                "protocol": "http",
+                "resourceId": "[concat('https://management.azure.com/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.Web/sites/', parameters('functionAppName'))]",
+                "credentials": {
+            "header": {
+                "x-functions-key": [
+                    "[listkeys(concat(variables('functionAppId'), '/host/default/'),'2016-08-01').functionKeys.apimanagement]"
+                ]
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('apiManagementInstanceName'), '/', parameters('functionAppName'), '/post-httptriggercsharp1')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementInstanceName'), parameters('functionAppName'))]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementInstanceName'))]"
+            ],
+            "properties": {
+                "displayName": "HttpTriggerCSharp1",
+                "method": "POST",
+                "urlTemplate": "/HttpTriggerCSharp1",
+                "templateParameters": [
+                ],
+                "responses": [
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service/apis/operations/policies",
+            "apiVersion": "2019-01-01",
+            "name": "[concat(parameters('apiManagementInstanceName'), '/', parameters('functionAppName'), '/post-httptriggercsharp1/policy')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service/apis/operations', parameters('apiManagementInstanceName'), parameters('functionAppName'), 'post-httptriggercsharp1')]",
+                "[resourceId('Microsoft.ApiManagement/service/apis', parameters('apiManagementInstanceName'), parameters('functionAppName'))]",
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementInstanceName'))]"
+            ],
+            "properties": {
+                "value": "[concat('<policies>\r\n  <inbound>\r\n    <base />\r\n    <set-backend-service id=\"apim-generated-policy\" backend-id=\"', parameters('functionAppName'), '\" />\r\n  </inbound>\r\n  <backend>\r\n    <base />\r\n  </backend>\r\n  <outbound>\r\n    <base />\r\n  </outbound>\r\n  <on-error>\r\n    <base />\r\n  </on-error>\r\n</policies>')]",
+                "format": "xml"
+            }
+        }
+    ]
+}
