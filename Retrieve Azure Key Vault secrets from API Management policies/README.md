@@ -1,4 +1,4 @@
-# Implementing smart caching of secrets in Azure API Management policies
+# Retrieve Azure Key Vault secrets from API Management policies
 
 This template will create a Key Vault with a secret, and an API Management instance with an API with a single operation. After creation the endpoint of the secret should be updated in the API Management policy, and access should be granted for the Managed Identity of API Management on Key Vault. The complete scenario can be found on <https://blog.eldert.net/retrieve-azure-key-vault-secrets-from-api-management-policies/>.
 
